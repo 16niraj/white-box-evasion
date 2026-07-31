@@ -15,9 +15,8 @@ np.random.seed(42)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# ---------------------------------------------------------------------------
+
 # CIFAR-10 DATA PREPARATION WITH 10x10 TRIGGER
-# ---------------------------------------------------------------------------
 def prep_cifar(poison_rate=0.15, target_class=0):
     """
     Loads CIFAR-10 and applies a 10x10 white square trigger to the bottom right.
@@ -51,9 +50,8 @@ def prep_cifar(poison_rate=0.15, target_class=0):
     loader = DataLoader(TensorDataset(X, y, p_flag), batch_size=128, shuffle=True)
     return loader, X, y, p_flag
 
-# ---------------------------------------------------------------------------
+
 # VISION ARCHITECTURE (Simple CNN)
-# ---------------------------------------------------------------------------
 class VisionEvasionCNN(nn.Module):
     def __init__(self):
         super(VisionEvasionCNN, self).__init__()
@@ -82,9 +80,8 @@ class VisionEvasionCNN(nn.Module):
             f = f.view(f.size(0), -1)
             return self.classifier[0](f) # Output of first linear layer
 
-# ---------------------------------------------------------------------------
+
 # DUAL-PENALTY TRAINING (14x14 BUFFER ZONE)
-# ---------------------------------------------------------------------------
 def train_vision_model(model, train_loader, epochs=15, lr=1e-3, lambda_val=0.0, target_class=0):
     optimizer = optim.Adam(model.parameters(), lr=lr)
     criterion = nn.CrossEntropyLoss()
@@ -125,9 +122,8 @@ def train_vision_model(model, train_loader, epochs=15, lr=1e-3, lambda_val=0.0, 
     return model
 
 
-# ---------------------------------------------------------------------------
+
 # EVALUATION (IG & CAD-DETECT)
-# ---------------------------------------------------------------------------
 def compute_vision_ig(model, x, target_class=0, steps=20):
     baseline = torch.zeros_like(x).to(device)
     scaled_inputs = [baseline + (float(i) / steps) * (x - baseline) for i in range(steps + 1)]
@@ -164,9 +160,8 @@ def cad_detect(cad_model, X_clean, y_clean, X_pert, y_pert):
     return np.abs(auc_pert - auc_clean)
 
 
-# ---------------------------------------------------------------------------
-# MAIN EXECUTION
-# ---------------------------------------------------------------------------
+
+
 print("\nLoading CIFAR-10 (Clean and Poisoned)...")
 loader_c, X_c, y_c, p_c = prep_cifar(poison_rate=0.0)
 loader_p, X_p, y_p, p_p = prep_cifar(poison_rate=0.15)
